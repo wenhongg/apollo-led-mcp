@@ -75,6 +75,7 @@ class WLEDClient:
         await self._post_state({"seg": [{"id": 0, "fx": 0, "col": [[0, 0, 0]]}]})
         await asyncio.sleep(0.5)
         return await self._post_state({
+            "on": True,
             "seg": [{"id": 0, "fx": self._image_fx_id, "n": filename}]
         })
 
