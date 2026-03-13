@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apollo LED Control</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Apollo</h1>
+      <div id="status-bar" class="status disconnected">Checking...</div>
+    </header>
+
+    <div class="preview-card">
+      <img id="preview" src="/api/preview" width="192" height="192">
+    </div>
+
+    <div class="card">
+      <h2>Brightness</h2>
+      <div class="brightness-row">
+        <input type="range" id="brightness" min="0" max="255" value="128" oninput="updateBrightness(this.value)">
+        <span id="bri-val">128</span>
+      </div>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab active" data-panel="text-panel">Text</button>
+      <button class="tab" data-panel="animated-panel">Animated</button>
+      <button class="tab" data-panel="gif-panel">GIF</button>
+      <button class="tab" data-panel="image-panel">Image</button>
+      <button class="tab" data-panel="video-panel">Video</button>
+    </nav>
+
+    <div id="text-panel" class="card panel active">
+      <div class="field">
+        <input type="text" id="text-input" placeholder="Enter text..." maxlength="200">
+      </div>
+      <div class="controls-row">
+        <label>Color <input type="color" id="text-color" value="#ffffff"></label>
+        <label>BG <input type="color" id="bg-color" value="#000000"></label>
+        <label>Size <input type="number" id="font-size" value="12" min="6" max="24"></label>
+      </div>
+      <button class="btn-primary" onclick="sendText()">Display</button>
+    </div>
+
+    <div id="animated-panel" class="card panel">
+      <div class="field">
+        <input type="text" id="anim-text" placeholder="Enter text..." maxlength="200">
+      </div>
+      <div class="effect-grid">
+        <button class="effect-btn active" data-effect="scroll_horizontal">Scroll H</button>
+        <button class="effect-btn" data-effect="scroll_vertical">Scroll V</button>
+        <button class="effect-btn" data-effect="bounce">Bounce</button>
+        <button class="effect-btn" data-effect="typewriter">Typewriter</button>
+        <button class="effect-btn" data-effect="rainbow">Rainbow</button>
+        <button class="effect-btn" data-effect="fade">Fade</button>
+        <button class="effect-btn" data-effect="flash">Flash</button>
+      </div>
+      <div class="controls-row">
+        <label>Color <input type="color" id="anim-color" value="#00ff88"></label>
+        <label>BG <input type="color" id="anim-bg" value="#000000"></label>
+        <label>Size <input type="number" id="anim-size" value="12" min="6" max="24"></label>
+        <label>Speed <input type="number" id="anim-speed" value="100" min="20" max="1000" step="10"></label>
+      </div>
+      <button class="btn-primary" onclick="sendAnimatedText()">Display</button>
+    </div>
+
+    <div id="gif-panel" class="card panel">
+      <label class="file-drop" id="gif-drop">
+        <input type="file" id="gif-input" accept=".gif" hidden>
+        <span class="drop-label">Drop a GIF or click to browse</span>
+        <span class="drop-hint">Max 1 MB, will be resized to 64x64</span>
+      </label>
+      <button class="btn-primary" onclick="uploadFile('gif')">Upload GIF</button>
+    </div>
+
+    <div id="image-panel" class="card panel">
+      <label class="file-drop" id="image-drop">
+        <input type="file" id="image-input" accept=".png,.bmp,.gif" hidden>
+        <span class="drop-label">Drop an image or click to browse</span>
+        <span class="drop-hint">PNG, BMP, or GIF. Max 1 MB</span>
+      </label>
+      <button class="btn-primary" onclick="uploadFile('image')">Upload Image</button>
+    </div>
+
+    <div id="video-panel" class="card panel">
+      <label class="file-drop" id="video-drop">
+        <input type="file" id="video-input" accept=".mp4,.webm,.mov,.avi" hidden>
+        <span class="drop-label">Drop a video or click to browse</span>
+        <span class="drop-hint">MP4, WEBM, MOV, AVI. Max 50 MB</span>
+      </label>
+      <div class="controls-row">
+        <label>FPS <input type="number" id="video-fps" value="10" min="1" max="30"></label>
+        <label>Max sec <input type="number" id="video-duration" value="10" min="1" max="30"></label>
+      </div>
+      <button class="btn-primary" onclick="uploadVideo()">Convert & Display</button>
+    </div>
+
+    <button class="btn-off" onclick="turnOff()">Turn Off</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

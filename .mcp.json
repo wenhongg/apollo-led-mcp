@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "apollo-led": {
+      "type": "stdio",
+      "command": "venv/bin/python",
+      "args": ["src/mcp_server.py"],
+      "env": {
+        "APOLLO_URL": "http://localhost:9092"
+      }
+    }
+  }
+}

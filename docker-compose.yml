@@ -1,0 +1,8 @@
+services:
+  apollo:
+    build: .
+    ports:
+      - "9092:9092"
+    env_file:
+      - .env
+    restart: unless-stopped
