@@ -11,23 +11,22 @@ logger = logging.getLogger(__name__)
 class WLEDClient:
     def __init__(self, host: str):
         self.host = host
-        self._http = httpx.AsyncClient(base_url=f"http://{host}", timeout=5.0)
+        self._http = httpx.AsyncClient(base_url=f"http://{host}", timeout=2.0)
         self._image_fx_id: int | None = None
 
-    async def _request(self, method: str, path: str, retries: int = 5, **kwargs) -> httpx.Response:
+    async def _request(self, method: str, path: str, retries: int = 2, **kwargs) -> httpx.Response:
         """Send an HTTP request with retry on connection errors (ESP32 may be busy after flash writes)."""
         for attempt in range(retries):
             try:
-                # Use a short connect timeout per attempt so we can retry quickly
                 if "timeout" not in kwargs:
-                    kwargs["timeout"] = 5.0 if attempt == 0 else 2.0
+                    kwargs["timeout"] = 2.0
                 resp = await self._http.request(method, path, **kwargs)
                 resp.raise_for_status()
                 return resp
-            except (httpx.ConnectError, httpx.ConnectTimeout):
+            except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout, httpx.TimeoutException):
                 if attempt == retries - 1:
                     raise
-                delay = 1.0
+                delay = 0.2
                 logger.warning("WLED connection failed (attempt %d/%d), retrying in %.1fs", attempt + 1, retries, delay)
                 await asyncio.sleep(delay)
 
