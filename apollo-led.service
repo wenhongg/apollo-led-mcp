@@ -1,0 +1,15 @@
+[Unit]
+Description=Apollo LED MCP Server
+After=network.target
+
+[Service]
+Type=simple
+User=openclaw_user
+WorkingDirectory=/home/openclaw_user/apollo-led-mcp
+EnvironmentFile=/home/openclaw_user/apollo-led-mcp/.env
+ExecStart=/home/openclaw_user/apollo-led-mcp/venv/bin/uvicorn src.main:app --host 0.0.0.0 --port 9092
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

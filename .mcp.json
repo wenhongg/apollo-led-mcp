@@ -2,8 +2,8 @@
   "mcpServers": {
     "apollo-led": {
       "type": "stdio",
-      "command": "venv/bin/python",
-      "args": ["src/mcp_server.py"],
+      "command": "bash",
+      "args": ["-c", "cd /home/openclaw_user/apollo-led-mcp && exec venv/bin/python -m src.mcp_server"],
       "env": {
         "APOLLO_URL": "http://localhost:9092"
       }
