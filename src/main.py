@@ -46,8 +46,11 @@ async def _push_to_wled(data: bytes, mode: str, preview: Image.Image | None = No
     """Upload GIF data to WLED and activate the Image effect. Updates local state."""
     global current_mode, current_image
     client = _get_wled()
-    await client.upload_file(WLED_DISPLAY_FILENAME, data)
-    await client.set_image_effect(WLED_DISPLAY_FILENAME)
+    try:
+        await client.upload_file(WLED_DISPLAY_FILENAME, data)
+        await client.set_image_effect(WLED_DISPLAY_FILENAME)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Panel offline — cannot reach WLED at {config.WLED_HOST}: {type(e).__name__}")
     current_image = image_to_png(preview) if preview else None
     current_mode = mode
 
