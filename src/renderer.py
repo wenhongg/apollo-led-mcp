@@ -7,6 +7,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 from src.config import PANEL_HEIGHT, PANEL_WIDTH
 
+# Hard cap for decompression bomb protection — anything beyond this is absurd for a 64x64 panel
+Image.MAX_IMAGE_PIXELS = 8_000 * 8_000
+
+MAX_GIF_FRAMES = 200
+
 
 @functools.lru_cache(maxsize=8)
 def _load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -92,6 +97,56 @@ def render_text(
         y += line_height
 
     return img
+
+
+def resize_gif(data: bytes) -> bytes:
+    """Resize an animated GIF to panel dimensions, preserving per-frame timing."""
+    try:
+        src = Image.open(io.BytesIO(data))
+    except Exception as exc:
+        raise ValueError(f"Invalid GIF data: {exc}") from exc
+
+    default_duration = src.info.get("duration", 100)
+    n_frames = getattr(src, "n_frames", 1)
+    step = max(1, n_frames // MAX_GIF_FRAMES)
+
+    frames: list[Image.Image] = []
+    durations: list[int] = []
+    try:
+        for i in range(0, n_frames, step):
+            src.seek(i)
+            durations.append(src.info.get("duration", default_duration))
+            frame = src.copy().convert("RGB")
+            frame = frame.resize((PANEL_WIDTH, PANEL_HEIGHT), Image.LANCZOS)
+            frames.append(frame)
+    except EOFError:
+        pass
+
+    if not frames:
+        raise ValueError("GIF contains no frames")
+
+    buf = io.BytesIO()
+    frames[0].save(
+        buf,
+        format="GIF",
+        save_all=True,
+        append_images=frames[1:],
+        duration=durations,
+        loop=0,
+    )
+    return buf.getvalue()
+
+
+def resize_image(data: bytes) -> bytes:
+    """Resize a still image to panel dimensions and return as single-frame GIF."""
+    try:
+        img = Image.open(io.BytesIO(data)).convert("RGB")
+    except Exception as exc:
+        raise ValueError(f"Invalid image data: {exc}") from exc
+    img = img.resize((PANEL_WIDTH, PANEL_HEIGHT), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="GIF")
+    return buf.getvalue()
 
 
 def image_to_png(img: Image.Image) -> bytes:

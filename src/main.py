@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from src import config
 from src.animations import EFFECTS, generate_gif, video_to_gif
-from src.renderer import image_to_png, new_image, render_text
+from src.renderer import image_to_png, new_image, render_text, resize_gif, resize_image
 from src.wled import WLEDClient
 
 logging.basicConfig(level=logging.INFO)
@@ -160,8 +160,12 @@ async def display_gif(file: UploadFile):
     if not file.content_type or not file.content_type.startswith("image/gif"):
         raise HTTPException(status_code=400, detail="File must be a GIF image")
     data = await file.read()
+    try:
+        data = await asyncio.to_thread(resize_gif, data)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     if len(data) > config.MAX_UPLOAD_SIZE:
-        raise HTTPException(status_code=400, detail=f"File too large (max {config.MAX_UPLOAD_SIZE // 1024} KB)")
+        raise HTTPException(status_code=400, detail=f"Resized GIF too large (max {config.MAX_UPLOAD_SIZE // 1024} KB)")
     await _push_to_wled(data, "gif")
     return {"status": "ok", "mode": "gif", "filename": WLED_DISPLAY_FILENAME}
 
@@ -172,8 +176,15 @@ async def display_image(file: UploadFile):
     if not file.content_type or file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=400, detail="File must be PNG, BMP, or GIF")
     data = await file.read()
+    try:
+        if file.content_type == "image/gif":
+            data = await asyncio.to_thread(resize_gif, data)
+        else:
+            data = await asyncio.to_thread(resize_image, data)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     if len(data) > config.MAX_UPLOAD_SIZE:
-        raise HTTPException(status_code=400, detail=f"File too large (max {config.MAX_UPLOAD_SIZE // 1024} KB)")
+        raise HTTPException(status_code=400, detail=f"Resized image too large (max {config.MAX_UPLOAD_SIZE // 1024} KB)")
     await _push_to_wled(data, "image")
     return {"status": "ok", "mode": "image", "filename": WLED_DISPLAY_FILENAME}
 
